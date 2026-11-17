@@ -172,19 +172,37 @@ function tintOf(g) { return `var(--${g})`; }
 const LOGO = k => `logos/${k}.png`;
 function logoImg(k, cls = '') { return `<img src="${LOGO(k)}" alt="" class="${cls}" loading="lazy">`; }
 
-/** 背景の飾り：選んだグループの色とロゴ。全グループなら3色 */
+/** 背景の飾り：選んだグループの色とロゴ。全グループなら3色。
+ *  ページの長さに合わせて模様を縦に繰り返し、中身と一緒にスクロールさせる */
 function renderDecor() {
   const g = store.ui.group;
   const keys = g === 'all' ? ['il', 'nm', 'nj'] : [g];
+  const vh = window.innerHeight;
+  const tiles = Math.max(1, Math.ceil(document.body.scrollHeight / vh));
+  const key = `${g}:${tiles}`;
+  if ($('decor').dataset.k === key) return; // 変化がなければ作り直さない
   const pos = keys.length === 1
     ? [{ x: 62, y: 58, s: 92, r: -14 }]
     : [{ x: -6, y: 18, s: 46, r: -16 }, { x: 58, y: 44, s: 50, r: 10 }, { x: 4, y: 72, s: 48, r: 8 }];
-  const blobs = (keys.length === 1 ? [keys[0], keys[0]] : keys).map((k, i) =>
-    `<span class="blob" style="background:var(--${k});width:${60 + i * 10}vw;height:${60 + i * 10}vw;left:${[ -25, 45, 5 ][i]}vw;top:${[ -12, 35, 70 ][i]}vh"></span>`).join('');
-  const marks = keys.map((k, i) => `<img class="mark" src="${LOGO(k)}" alt="" style="left:${pos[i].x}vw;top:${pos[i].y}vh;width:${pos[i].s}vw;transform:rotate(${pos[i].r}deg)">`).join('');
-  const html = blobs + marks;
-  if ($('decor').dataset.k !== g) { $('decor').innerHTML = html; $('decor').dataset.k = g; }
+  let html = '';
+  for (let t = 0; t < tiles; t++) {
+    const top = t * vh;               // この1画面分の上端（px）
+    const flip = t % 2 === 1;          // 奇数枚目は左右反転して単調にしない
+    const X = (x, wv) => flip ? 100 - x - wv : x;
+    (keys.length === 1 ? [keys[0], keys[0]] : keys).forEach((k, i) => {
+      const wv = 60 + i * 10;
+      html += `<span class="blob" style="background:var(--${k});width:${wv}vw;height:${wv}vw;left:${X([-25, 45, 5][i], wv)}vw;top:${top + [-12, 35, 70][i] * vh / 100}px"></span>`;
+    });
+    keys.forEach((k, i) => {
+      const p = pos[i];
+      html += `<img class="mark" src="${LOGO(k)}" alt="" style="left:${X(p.x, p.s)}vw;top:${top + p.y * vh / 100}px;width:${p.s}vw;transform:rotate(${flip ? -p.r : p.r}deg)">`;
+    });
+  }
+  $('decor').innerHTML = html;
+  $('decor').dataset.k = key;
 }
+// 中身の長さが変わったら（読み込み・タブ切替・折りたたみ）背景を伸ばす
+new ResizeObserver(() => { if (DATA) renderDecor(); }).observe(document.body);
 
 function render() {
   if (!DATA) return;
@@ -206,7 +224,7 @@ function render() {
   if (store.ui.tab === 'guide') { for (const b of document.querySelectorAll('#tabbar button')) b.setAttribute('aria-selected', String(b.dataset.tab === store.ui.tab)); renderGuide(now); return; }
   if (store.ui.group !== 'all' && !DATA.groups.some(g => g.key === store.ui.group)) {
     renderTabs(); renderDecor();
-    $('main').innerHTML = `<div class="empty-art" style="padding-top:48px">${logoImg('nj')}<span>≒JOYはまだ公式サイトの情報を読み込んでいない。<br>公式サイトのURLを設定すると、ここに表示される。</span></div>`;
+    $('main').innerHTML = `<div class="empty-art" style="padding-top:48px">${logoImg('nj')}<span>≒JOYの情報はまだ読み込まれていない。<br>次の自動更新（朝5時台・夜0時台）で表示される。</span></div>`;
     $('vodBadge').hidden = true;
     for (const b of document.querySelectorAll('#tabbar button')) b.setAttribute('aria-selected', String(b.dataset.tab === store.ui.tab));
     return;
@@ -314,8 +332,11 @@ function calendarHtml(cs, now, today) {
 }
 
 function emptyArt(text) {
-  const k = store.ui.group === 'all' ? ['il', 'nm', 'nj'][new Date().getDate() % 3] : store.ui.group;
-  return `<div class="empty-art">${logoImg(k)}<span>${esc(text)}</span></div>`;
+  // 全グループのときは3つのロゴを並べる（どれか1つだと、そのグループの話に見えてしまう）
+  const art = store.ui.group === 'all'
+    ? `<span class="trio">${logoImg('il')}${logoImg('nm')}${logoImg('nj')}</span>`
+    : logoImg(store.ui.group);
+  return `<div class="empty-art">${art}<span>${esc(text)}</span></div>`;
 }
 function sectionHead(title, n, raw) {
   return `<div class="section-h"><h2>${esc(title)}</h2><span class="count">${raw ? esc(n) : n + '件'}</span></div>`;

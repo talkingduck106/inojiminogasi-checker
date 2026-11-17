@@ -63,6 +63,7 @@ h1 { font-size: 1.65rem; font-weight: 700; margin: 0; letter-spacing: .01em; }
 .updated { flex: 1; font-size: .765rem; color: var(--label2); padding-top: .5em; }
 .iconbtn { min-width: 44px; min-height: 44px; display: grid; place-items: center; border-radius: 22px; }
 .iconbtn svg { width: 24px; height: 24px; fill: var(--label2); }
+.iconbtn svg.gear { width: 26px; height: 26px; fill: none; stroke: var(--label); stroke-width: 2.1; stroke-linejoin: round; }
 .iconbtn.small { min-width: 44px; min-height: 44px; font-size: .9rem; color: inherit; }
 
 /* グループ切り替え（セグメントコントロール） */
@@ -333,19 +334,20 @@ details.fold[open] .chev { transform: rotate(90deg); }
 .menu button.danger { color: var(--red); }
 
 /* ================= イコノイジョイの遊び ================= */
-body { background: var(--bg); }
+body { background: var(--bg); position: relative; min-height: 100vh; }
 .bar, main, .tabbar { position: relative; z-index: 1; }
 .bar { position: sticky; z-index: 10; }
 .tabbar { position: fixed; z-index: 15; }
 
 /* 背景：グループ色のやわらかいにじみ＋ロゴの水玉に合わせたドット＋大きなロゴの透かし */
-.decor { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+/* 中身と一緒にスクロールする（ページ全体の高さに広がる） */
+.decor { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .decor::before { /* 水玉 */
   content: ""; position: absolute; inset: 0; opacity: .5;
   background-image: radial-gradient(var(--dot) 1.4px, transparent 1.6px);
   background-size: 22px 22px;
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
-  mask-image: linear-gradient(180deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 260px);
+  mask-image: linear-gradient(180deg, transparent 0, #000 260px);
 }
 .decor .blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; }
 .decor .mark { position: absolute; opacity: .13; }
@@ -378,6 +380,8 @@ body { background: var(--bg); }
 /* 空のときの表示にロゴ */
 .empty-art { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 0 6px; color: var(--label2); font-size: .9rem; }
 .empty-art img { width: 56px; height: 56px; object-fit: contain; opacity: .85; }
+.empty-art .trio { display: flex; }
+.empty-art .trio img { width: 40px; height: 40px; margin: 0 -2px; }
 
 /* 上の操作部分：色で区切らず、下に向かって透明になるぼかし（HIG：スクロールの端の効果）。背景の色がそのまま上まで続く */
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {

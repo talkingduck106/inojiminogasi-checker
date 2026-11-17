@@ -21,7 +21,7 @@ const GROUPS = [
   { key: 'il', name: '＝LOVE', base: 'https://equal-love.jp', news: 'https://equal-love.jp/news/' },
   { key: 'nm', name: '≠ME', base: 'https://not-equal-me.jp', news: 'https://not-equal-me.jp/news/1/' },
   // ≒JOY は公式サイトのURLが決まったら追加する
-  // { key: 'nj', name: '≒JOY', base: 'https://...' },
+  { key: 'nj', name: '≒JOY', base: 'https://nearly-equal-joy.jp', news: 'https://nearly-equal-joy.jp/news/1/' },
 ];
 const PAST_DAYS = 45;   // 何日前まで取るか（見逃し消化用）
 const FUTURE_DAYS = 60; // 何日先まで取るか
@@ -102,8 +102,11 @@ export function detectMembers(title, body, names) {
     seg = m || `${title}\n${body}`;
   }
   const cast = field(body, '出演', '出演者');
+  // 「髙」と「高」の表記ゆれ、名前の間の空白を吸収して比べる
+  const norm = (x) => x.replace(/髙/g, '高').replace(/[\s　]/g, '');
+  const s = norm(seg);
   return {
-    members: names.filter(n => seg.includes(n)),
+    members: names.filter(n => s.includes(norm(n))),
     castTBD: /ランダム|未定|調整中/.test(cast),
   };
 }
